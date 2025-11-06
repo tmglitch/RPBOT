@@ -5,36 +5,31 @@ from discord.ext import commands
 
 TOKEN = os.getenv("TOKEN")
 if not TOKEN:
-    raise RuntimeError("TOKEN environment variable not set")
+    raise RuntimeError("TOKEN env var not set")
 
 intents = discord.Intents.default()
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents)  # prefix unused now
 
 @bot.event
 async def on_ready():
     print(f"✅ Logged in as {bot.user}")
     try:
         synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} slash command(s)")
+        print(f"Slash commands synced: {len(synced)}")
     except Exception as e:
-        print("Slash sync error:", e)
+        print("Sync error:", e)
 
-# /me command – posts "**Username** *message*" publicly and deletes interaction
-@bot.tree.command(name="me", description="Speak in a roleplay style (everyone sees it)")
-@app_commands.describe(message="The message you want to say")
+@bot.tree.command(name="me", description="Say something in roleplay style")
+@app_commands.describe(message="What do you want to say?")
 async def me(interaction: discord.Interaction, message: str):
     username = interaction.user.display_name
+    # send a normal (non-ephemeral) message; no auto-delete
+    await interaction.response.send_message(f"**{username}** {message}", ephemeral=False)
 
-    # Send the visible message
-    await interaction.response.send_message(f"**{username}** *{message}*")
+if __name__ == "__main__":
+    bot.run(TOKEN)
 
-    # Delete the original interaction (the gray "User used /me" bar)
-    try:
-        await interaction.delete_original_response()
-    except Exception as e:
-        print("Couldn't delete original interaction:", e)
 
-bot.run(TOKEN)
 
 
 
